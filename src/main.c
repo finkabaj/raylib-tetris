@@ -16,7 +16,7 @@
 
 bool hit()
 {
-    switch (falling_piece->shape)
+    switch (falling_piece.shape)
     {
         case STRAIGHT:
             return hit_straight();
@@ -32,6 +32,8 @@ bool hit()
             return hit_t();
         case SKEW_REVERSED:
             return hit_skew_reversed();
+        default:
+            return false;
     }
 }
 
@@ -57,47 +59,41 @@ void spawn()
     // }
 }
 
-void delete_rows() {}
-
-void fall()
+void rotate()
 {
-    switch (falling_piece->shape)
+    switch (falling_piece.shape)
     {
         case STRAIGHT:
-            return straight_fall();
-        case SQUARE:
-            return square_fall();
+            return rotate_straight();
         case LEFT:
-            return left_fall();
+            return rotate_left();
         case RIGHT:
-            return right_fall();
+            return rotate_right();
         case SKEW:
-            return skew_fall();
+            return rotate_skew();
         case T:
-            return t_fall();
+            return rotate_t();
         case SKEW_REVERSED:
-            return skew_reversed_fall();
+            return rotate_skew_reversed();
+        default:
+            return;
     }
 }
+
+void delete_rows() {}
 
 void update_game()
 {
     if (hit())
     {
-        printf("HIT\n");
         delete_rows();
-
-        if (++game_state.spawned % 10 == 0)
-        {
-            game_state.speed = min(game_state.speed + 1, MAX_SPEED);
-        }
 
         spawn();
 
         return;
     }
 
-    fall();
+    move_down();
 }
 
 void draw_side_bar()
@@ -123,20 +119,12 @@ void draw_game_field()
             Rectangle outline = {20 + GAME_FIELD_WIDTH / 10.0f * x, 20 + GAME_FIELD_HEIGHT / 20.0f * y,
                                  GAME_FIELD_WIDTH / 10.0f, GAME_FIELD_HEIGHT / 20.0f};
 
-            if (!game_state.field[y][x])
-            {
-                DrawRectangleRec(cell, BLACK);
-                DrawRectangleLinesEx(outline, LINE_THICK, (Color){21, 23, 25});
-            }
-            else
-            {
-                Color cell_color = game_state.field[y][x]->color;
-                DrawRectangleRec(cell, cell_color);
-                cell_color.r += 10;
-                cell_color.g += 10;
-                cell_color.b += 10;
-                DrawRectangleLinesEx(cell, LINE_THICK, cell_color);
-            }
+            Color cell_color = get_color_from_shape(game_state.field[y][x]);
+            DrawRectangleRec(cell, cell_color);
+            cell_color.r += 10;
+            cell_color.g += 10;
+            cell_color.b += 10;
+            DrawRectangleLinesEx(cell, LINE_THICK, cell_color);
         }
     }
 
@@ -151,23 +139,16 @@ void draw_game()
 
 void process_input()
 {
-    int key = GetKeyPressed();
-    switch (falling_piece->shape)
+    switch (GetKeyPressed())
     {
-        case STRAIGHT:
-            process_input_straight(key);
-        case SKEW:
-            process_input_skew(key);
-        case SKEW_REVERSED:
-            process_input_skew_reversed(key);
-        case T:
-            process_input_t(key);
-        case LEFT:
-            process_input_left(key);
-        case RIGHT:
-            process_input_right(key);
-        case SQUARE:
-            process_input_square(key);
+        case KEY_LEFT:
+            return move_left();
+        case KEY_RIGHT:
+            return move_right();
+        case KEY_DOWN:
+            return move_down();
+        case KEY_UP:
+            return rotate();
     }
 }
 
@@ -202,7 +183,7 @@ int main()
             process_input();
 
             tick++;
-            if (tick % (TICK - game_state.speed) == 0)
+            if (tick % TICK == 0)
             {
                 update_game();
                 draw_game();

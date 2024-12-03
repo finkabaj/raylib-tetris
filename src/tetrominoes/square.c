@@ -1,9 +1,7 @@
 #include "square.h"
 
-void square_fall() {}
-
 bool hit_square() {}
 
-void process_input_square(int key) {}
+void rotate_square() {}
 
 void spawn_square() {}

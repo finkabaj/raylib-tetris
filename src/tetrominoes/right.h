@@ -3,11 +3,9 @@
 
 #include "stdbool.h"
 
-void right_fall();
-
 bool hit_right();
 
-void process_input_right(int key);
+void rotate_right();
 
 void spawn_right();
 

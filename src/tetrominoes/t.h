@@ -3,11 +3,9 @@
 
 #include "stdbool.h"
 
-void t_fall();
-
 bool hit_t();
 
-void process_input_t(int key);
+void rotate_t();
 
 void spawn_t();
 

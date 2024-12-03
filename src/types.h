@@ -9,17 +9,10 @@
 #define GAME_FIELD_HEIGHT 800
 #define LINE_THICK 2
 #define TICK 30
-#define MAX_SPEED 25
 #define ROWS 20
 #define COLUMNS 10
 
-typedef struct GameState GameState;
-
-typedef struct Tetrimino Tetrimino;
-
-typedef enum Shape Shape;
-
-enum Shape
+typedef enum Shape
 {
     STRAIGHT,
     SQUARE,
@@ -28,23 +21,23 @@ enum Shape
     SKEW,
     T,
     SKEW_REVERSED,
-};
+    EMPTY,
+} Shape;
 
-struct Tetrimino
+typedef struct Tetrimino
 {
     int rotation;
-    int cell;
     Shape shape;
-    Color color;
-};
+    Vector2 coords[4];
+    int left_x;
+    int top_y;
+} Tetrimino;
 
-struct GameState
+typedef struct GameState
 {
-    Tetrimino ***field;
-    int speed;
+    Shape field[20][10];
     int score;
-    int spawned;
     bool lost;
-};
+} GameState;
 
 #endif
