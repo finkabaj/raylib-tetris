@@ -2,9 +2,6 @@
 
 #include "state.h"
 
-int max(int a, int b) { return a > b ? a : b; }
-int min(int a, int b) { return a < b ? a : b; }
-
 Color get_color_from_shape(Shape shape)
 {
     switch (shape)

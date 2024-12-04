@@ -4,9 +4,6 @@
 #include "stdbool.h"
 #include "types.h"
 
-int max(int a, int b);
-int min(int a, int b);
-
 Color get_color_from_shape(Shape shape);
 
 bool has_hit();
