@@ -5,95 +5,125 @@
 #include "helpers.h"
 #include "raylib.h"
 #include "state.h"
-#include "tetrominoes/left.h"
-#include "tetrominoes/right.h"
-#include "tetrominoes/skew.h"
-#include "tetrominoes/skew_reversed.h"
-#include "tetrominoes/square.h"
-#include "tetrominoes/straight.h"
-#include "tetrominoes/t.h"
+#include "tetro.h"
 #include "types.h"
-
-bool hit()
-{
-    switch (falling_piece.shape)
-    {
-        case STRAIGHT:
-            return hit_straight();
-        case SQUARE:
-            return hit_square();
-        case LEFT:
-            return hit_left();
-        case RIGHT:
-            return hit_right();
-        case SKEW:
-            return hit_skew();
-        case T:
-            return hit_t();
-        case SKEW_REVERSED:
-            return hit_skew_reversed();
-        default:
-            return false;
-    }
-}
 
 void spawn()
 {
-    spawn_straight();
-    // switch (rand() % 7)
-    //{
-    //     case 0:
-    //         return spawn_straight();
-    //     case 1:
-    //         return spawn_skew();
-    //     case 2:
-    //         return spawn_skew_reversed();
-    //     case 3:
-    //         return spawn_square();
-    //     case 4:
-    //         return spawn_t();
-    //     case 5:
-    //         return spawn_left();
-    //     case 6:
-    //         return spawn_right();
-    // }
+    switch (rand() % 7)
+    {
+        case 0:
+            return spawn_straight();
+        case 1:
+            return spawn_skew();
+        case 2:
+            return spawn_skew_reversed();
+        case 3:
+            return spawn_square();
+        case 4:
+            return spawn_t();
+        case 5:
+            return spawn_left();
+        case 6:
+            return spawn_right();
+    }
 }
 
 void rotate()
 {
-    switch (falling_piece.shape)
+    if (falling_piece.shape == SQUARE)
     {
-        case STRAIGHT:
-            return rotate_straight();
-        case LEFT:
-            return rotate_left();
-        case RIGHT:
-            return rotate_right();
-        case SKEW:
-            return rotate_skew();
-        case T:
-            return rotate_t();
-        case SKEW_REVERSED:
-            return rotate_skew_reversed();
-        default:
-            return;
-    }
-}
-
-void delete_rows() {}
-
-void update_game()
-{
-    if (hit())
-    {
-        delete_rows();
-
-        spawn();
-
         return;
     }
 
-    move_down();
+    clear_tetro_from_field(falling_piece.coords);
+
+    float center_x = falling_piece.coords[0].x;
+    float center_y = falling_piece.coords[0].y;
+
+    Vector2 new_coords[4];
+    new_coords[0] = falling_piece.coords[0];
+
+    for (int i = 1; i < 4; i++)
+    {
+        float x = falling_piece.coords[i].x - center_x;
+        float y = falling_piece.coords[i].y - center_y;
+
+        float new_x = y;
+        float new_y = -x;
+
+        new_coords[i].x = new_x + center_x;
+        new_coords[i].y = new_y + center_y;
+
+        if (new_coords[i].x < 0 || new_coords[i].x > 9 || new_coords[i].y < 0 || new_coords[i].y > 19 ||
+            game_state.field[(int)new_coords[i].y][(int)new_coords[i].x] != EMPTY)
+        {
+            return place_tetro_on_field(falling_piece.coords, falling_piece.shape);
+        }
+    }
+
+    place_tetro_on_field(new_coords, falling_piece.shape);
+    copy_new_pos_to_falling_piece(new_coords);
+}
+
+void delete_rows()
+{
+    int deleted_rows = 0;
+
+    for (int y = 19; y >= 0; y--)
+    {
+        bool delete_row = true;
+        for (int x = 0; x < 10; x++)
+        {
+            if (game_state.field[y][x] == EMPTY)
+            {
+                delete_row = false;
+                break;
+            }
+        }
+
+        if (delete_row)
+        {
+            for (int x = 0; x < 10; x++)
+            {
+                game_state.field[y][x] = EMPTY;
+            }
+
+            for (int yy = y - 1; yy >= 0; yy--)
+            {
+                for (int x = 0; x < 10; x++)
+                {
+                    game_state.field[yy + 1][x] = game_state.field[yy][x];
+                }
+            }
+
+            deleted_rows++;
+            y++;
+        }
+    }
+
+    game_state.score += deleted_rows * 100;
+}
+
+void update_game()
+{
+    tick++;
+    if (tick >= current_tick_rate)
+    {
+        if (has_hit())
+        {
+            game_state.score += 10;
+            delete_rows();
+
+            spawn();
+        }
+        else
+        {
+            move_down();
+        }
+
+        tick = 0;
+    }
 }
 
 void draw_side_bar()
@@ -139,16 +169,33 @@ void draw_game()
 
 void process_input()
 {
+    if (game_state.lost)
+    {
+        if (GetKeyPressed() == KEY_SPACE)
+        {
+            init_game_state();
+            spawn();
+        }
+        return;
+    }
+
     switch (GetKeyPressed())
     {
         case KEY_LEFT:
             return move_left();
         case KEY_RIGHT:
             return move_right();
-        case KEY_DOWN:
-            return move_down();
         case KEY_UP:
             return rotate();
+    }
+
+    if (IsKeyDown(KEY_DOWN))
+    {
+        current_tick_rate = FAST_TICK_RATE;
+    }
+    else
+    {
+        current_tick_rate = NORMAL_TICK_RATE;
     }
 }
 
@@ -157,12 +204,8 @@ int main()
     srand(time(NULL));
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "tetris");
-    SetWindowState(FLAG_VSYNC_HINT);
 
-    if (!IsWindowState(FLAG_VSYNC_HINT))
-    {
-        SetTargetFPS(60);
-    }
+    SetTargetFPS(60);
 
     Image icon = LoadImage(ASSETS_PATH "icon.png");
 
@@ -178,23 +221,17 @@ int main()
 
         ClearBackground((Color){37, 37, 37, 0});
 
+        draw_game();
+        process_input();
+
         if (!game_state.lost)
         {
-            process_input();
-
-            tick++;
-            if (tick % TICK == 0)
-            {
-                update_game();
-                draw_game();
-            }
+            update_game();
         }
         else
         {
-            DrawText("YOU LOST!", SCREEN_WIDTH / 2 - 60, SCREEN_HEIGHT / 2 - 20, 20, RED);
+            DrawText("YOU LOST!\nPRESS SPACE TO RESTART", SCREEN_WIDTH / 2 - 60, SCREEN_HEIGHT / 2 - 20, 20, RED);
         }
-
-        draw_game();
 
         EndDrawing();
     }

@@ -5,6 +5,7 @@
 
 extern GameState game_state;
 extern int tick;
+extern int current_tick_rate;
 
 extern Tetrimino falling_piece;
 

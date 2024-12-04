@@ -8,9 +8,11 @@
 #define SCREEN_HEIGHT 850
 #define GAME_FIELD_HEIGHT 800
 #define LINE_THICK 2
-#define TICK 30
 #define ROWS 20
 #define COLUMNS 10
+
+#define NORMAL_TICK_RATE 30
+#define FAST_TICK_RATE 5
 
 typedef enum Shape
 {
@@ -26,11 +28,8 @@ typedef enum Shape
 
 typedef struct Tetrimino
 {
-    int rotation;
     Shape shape;
     Vector2 coords[4];
-    int left_x;
-    int top_y;
 } Tetrimino;
 
 typedef struct GameState

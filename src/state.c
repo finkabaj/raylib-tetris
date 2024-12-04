@@ -2,6 +2,7 @@
 
 GameState game_state;
 int tick;
+int current_tick_rate;
 
 Tetrimino falling_piece;
 int x_falling_piece;

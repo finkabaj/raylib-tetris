@@ -5,19 +5,6 @@
 int max(int a, int b) { return a > b ? a : b; }
 int min(int a, int b) { return a < b ? a : b; }
 
-bool column_clear(int x, int from_y, int to_y)
-{
-    for (int y = from_y; y < to_y; y++)
-    {
-        if (game_state.field[y][x] != EMPTY)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 Color get_color_from_shape(Shape shape)
 {
     switch (shape)
@@ -83,7 +70,6 @@ void move_left()
 
     place_tetro_on_field(new_cords, falling_piece.shape);
     copy_new_pos_to_falling_piece(new_cords);
-    falling_piece.left_x--;
 }
 
 void move_right()
@@ -104,7 +90,6 @@ void move_right()
 
     place_tetro_on_field(new_cords, falling_piece.shape);
     copy_new_pos_to_falling_piece(new_cords);
-    falling_piece.left_x++;
 }
 
 void move_down()
@@ -125,5 +110,37 @@ void move_down()
 
     place_tetro_on_field(new_cords, falling_piece.shape);
     copy_new_pos_to_falling_piece(new_cords);
-    falling_piece.top_y++;
+}
+
+bool has_hit()
+{
+    clear_tetro_from_field(falling_piece.coords);
+
+    for (int i = 0; i < 4; i++)
+    {
+        Vector2 pos = falling_piece.coords[i];
+        if (pos.y == 19 || game_state.field[(int)pos.y + 1][(int)pos.x] != EMPTY)
+        {
+            place_tetro_on_field(falling_piece.coords, falling_piece.shape);
+            return true;
+        }
+    }
+
+    place_tetro_on_field(falling_piece.coords, falling_piece.shape);
+
+    return false;
+}
+
+bool spawn_clear(Vector2 tetro[4])
+{
+    for (int i = 0; i < 4; i++)
+    {
+        Vector2 pos = tetro[i];
+        if (game_state.field[(int)pos.y][(int)pos.x] != EMPTY)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
